@@ -1,0 +1,17 @@
+{
+  "name": "1",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "babel-node ./mro1"
+  },
+  "dependencies": {
+    "mathjs": "latest",
+    "babel-cli": "6.26.0",
+    "babel-preset-stage-2": "6.24.1",
+    "babel-preset-env": "1.6.0",
+    "lodash": "4.17.4",
+    "is": "3.2.1",
+    "chalk" : "^2.1.0",
+    "performance-now" : "^2.1.0"
+  }
+}
