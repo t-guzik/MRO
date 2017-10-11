@@ -12,6 +12,7 @@
     "lodash": "4.17.4",
     "is": "3.2.1",
     "chalk" : "^2.1.0",
-    "performance-now" : "^2.1.0"
+    "performance-now" : "^2.1.0",
+    "moment" : "^2.19.1"
   }
 }
