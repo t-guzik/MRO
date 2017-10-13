@@ -4,6 +4,8 @@ import _ from 'lodash';
 import chalk from 'chalk';
 import now from 'performance-now';
 
+const plotly = require('plotly')()
+
 // Logging
 const log       = console.log;
 const padding   = 18;
@@ -25,6 +27,15 @@ String.prototype.padding = function (n, c) {
   return (n < 0) ? pad + val : val + pad;
 };
 
+const getRandomColor = () => {
+  let letters = '0123456789ABCDEF';
+  let color   = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
 const totalTimeMsg = '###total###';
 
 const measurePerformance = (fun, ...args) => {
@@ -42,13 +53,31 @@ const resultsFile = fs.createWriteStream('./results.csv');
 
 // Data
 const radius          = 10;
-const testsNumber     = 200;
+const testsNumber     = 100;
 const pointsNumber    = 1000;
-const dimension       = { initial : 2, max : 13 }
+const dimension       = { initial : 1, max : 10 }
 const point           = { min : 0, max : 2 * radius };
 const resultPrecision = 3;
 
-resultsFile.write(`"Radius: ${radius}", "Tests : ${testsNumber}"`)
+// Plot data
+
+const traces  = []
+
+const layout = {
+  autosize : true,
+  title    : 'Curse of dimension',
+  xaxis    : {
+    title    : 'Dimension number',
+    showgrid : false,
+    zeroline : false
+  },
+  yaxis    : {
+    title    : 'Percent [%]',
+    showline : false
+  }
+};
+
+resultsFile.write(`"Radius: ${radius}", "Tests : ${testsNumber}"\n`)
 
 // Functions
 const euclidianDistance = (args) => {
@@ -69,7 +98,7 @@ const calculateCurseOfDimension = (dimension, testsNumber) => {
   const pointsForDimensionInfo = `Points: ${pointsForDimension}`;
 
   info(`${dimensionInfo} | ${pointsForDimensionInfo}`)
-  resultsFile.write(`${dimensionInfo.replace(':', ',')}, ${pointsForDimensionInfo.replace(':', ',')},`)
+  resultsFile.write(`${dimensionInfo} | ${pointsForDimensionInfo},`)
 
   for (let i = 0; i < testsNumber; i++) {
     let inside = 0;
@@ -86,13 +115,49 @@ const calculateCurseOfDimension = (dimension, testsNumber) => {
     result(fill + '%')
   }
 
-  resultsFile.write('Results,' + _.map(fillData, fill => `${fill}`).toString())
-  resultsFile.write(',StD,' + math.std(fillData).toPrecision(resultPrecision) + '\n')
+  const standardDeviation = math.std(fillData).toPrecision(resultPrecision);
+
+  resultsFile.write('StD,' + standardDeviation + ',')
+  resultsFile.write('Results:,' + _.map(fillData, fill => `${fill}`).toString() + '\n')
+
+  const trace = {
+    x       : dimension,
+    y       : math.mean(fillData).toPrecision(resultPrecision),
+    error_y : {
+      type      : 'constant',
+      value     : standardDeviation,
+      color     : '#555',
+      thickness : 1,
+      width     : 2,
+      opacity   : 1
+    },
+    mode    : 'markers',
+    name    : `${dimensionInfo} | ${pointsForDimensionInfo}`,
+    marker  : {
+      color : getRandomColor(),
+      size  : 4
+    },
+    type    : 'scatter'
+  };
+
+  traces.push(trace)
 }
 
 // Execution
 measurePerformance(() => {
-  for (let i = dimension.initial; i < dimension.max; i++) {
+  for (let i = dimension.initial; i <= dimension.max; i++) {
     measurePerformance(calculateCurseOfDimension, i, testsNumber)
   }
+
+  const graphOptions = {
+    'filename'       : 'curseOfDimension',
+    'fileopt'        : 'overwrite',
+    'layout'         : layout,
+    'world_readable' : true
+  }
+
+  plotly.plot(traces, graphOptions, function (err, msg) {
+    console.log(msg);
+  });
+
 }, totalTimeMsg)
