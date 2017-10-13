@@ -1,9 +1,7 @@
 import math from 'mathjs';
 import fs from 'fs';
-import _ from 'lodash';
 import chalk from 'chalk';
 import now from 'performance-now';
-
 const plotly = require('plotly')()
 
 // Logging
@@ -49,83 +47,94 @@ const measurePerformance = (fun, ...args) => {
   return result;
 }
 
-const resultsFile = fs.createWriteStream('./results.csv');
+const resultsFile = fs.createWriteStream('./resultsB.csv');
 
 // Data
-const radius          = 10;
-const testsNumber     = 100;
-const pointsNumber    = 1000;
-const dimension       = { initial : 1, max : 10 }
-const point           = { min : 0, max : 2 * radius };
+const radius          = 1;
+const testsNumber     = 10;
+const pointsNumber    = 100;
+const dimension       = { initial : 1, max : 25 }
+const point           = { min : 0, max : 1 };
 const resultPrecision = 3;
 
 // Plot data
 
-const traces  = []
+const traces = []
 
 const layout = {
   autosize : true,
-  title    : 'Curse of dimension',
+  title    : 'Klątwa wymiarowości - B',
   xaxis    : {
-    title    : 'Dimension number',
+    title    : 'Liczba wymiarów',
     showgrid : false,
     zeroline : false
   },
   yaxis    : {
-    title    : 'Percent [%]',
+    title    : 'Stosunek odchylenia standardowego do średniej arytmetycznej',
     showline : false
   }
 };
 
-resultsFile.write(`"Radius: ${radius}", "Tests : ${testsNumber}"\n`)
+resultsFile.write(`"Promień: ${radius}", "Liczba testów : ${testsNumber}"\n`)
 
 // Functions
-const euclidianDistance = (args) => {
+const euclidianDistance = (args1, args2) => {
+  if (args1.length !== args2.length) {
+    throw new Error;
+  }
   let differences = 0;
 
-  for (let i = 0; i < args.length; i++) {
-    differences += math.square(radius - args[i])
+  for (let i = 0; i < args1.length; i++) {
+    differences += math.square(args1[i] - args2[i])
   }
 
   return math.sqrt(differences)
 }
 
 const calculateCurseOfDimension = (dimension, testsNumber) => {
-  const pointsForDimension = pointsNumber * (math.pow(2, (dimension - 1)));
-  const fillData           = [];
+  const pointsForDimension = pointsNumber + (50 * (dimension-1));
 
-  const dimensionInfo          = `Dimension: ${dimension}`;
-  const pointsForDimensionInfo = `Points: ${pointsForDimension}`;
+  const dimensionInfo          = `Wymiar: ${dimension}`;
+  const pointsForDimensionInfo = `Liczba punktów: ${pointsForDimension}`;
+  const results = []
 
   info(`${dimensionInfo} | ${pointsForDimensionInfo}`)
-  resultsFile.write(`${dimensionInfo} | ${pointsForDimensionInfo},`)
+  resultsFile.write(`${dimensionInfo} | ${pointsForDimensionInfo},\n`)
 
   for (let i = 0; i < testsNumber; i++) {
-    let inside = 0;
+    let points    = [];
+    let distances = [];
 
     for (let j = 0; j < pointsForDimension; j++) {
-      if (euclidianDistance(math.random([dimension], point.min, point.max)) < radius) {
-        inside++
+      points.push(math.random([dimension], point.min, point.max))
+    }
+
+
+
+    for (let j = 0; j < points.length; j++) {
+      for (let k = j+1; k < points.length; k++) {
+        distances.push(euclidianDistance(points[j], points[k]))
       }
     }
 
-    const fill = ((inside / pointsForDimension) * 100).toPrecision(resultPrecision);
-    fillData.push(fill)
+    let standardDeviation = math.std(distances)
+    let mean = math.mean(distances)
+    let devideResult = (standardDeviation/mean).toPrecision(resultPrecision)
 
-    result(fill + '%')
+    resultsFile.write('Odchylenie standardowe,' + standardDeviation.toPrecision(resultPrecision) + ',')
+    resultsFile.write('Średnia arytmetyczna,' + mean.toPrecision(resultPrecision) + ',')
+    resultsFile.write('Rezultat,' + devideResult + '\n')
+    results.push(devideResult)
+    result(devideResult)
   }
 
-  const standardDeviation = math.std(fillData).toPrecision(resultPrecision);
-
-  resultsFile.write('StD,' + standardDeviation + ',')
-  resultsFile.write('Results:,' + _.map(fillData, fill => `${fill}`).toString() + '\n')
 
   const trace = {
     x       : dimension,
-    y       : math.mean(fillData).toPrecision(resultPrecision),
+    y       : math.mean(results).toPrecision(resultPrecision),
     error_y : {
       type      : 'constant',
-      value     : standardDeviation,
+      value     : math.std(results).toPrecision(resultPrecision),
       color     : '#555',
       thickness : 1,
       width     : 2,
@@ -150,7 +159,7 @@ measurePerformance(() => {
   }
 
   const graphOptions = {
-    'filename'       : 'curseOfDimension',
+    'filename'       : 'curseOfDimension2',
     'fileopt'        : 'overwrite',
     'layout'         : layout,
     'world_readable' : true

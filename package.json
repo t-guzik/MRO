@@ -2,7 +2,7 @@
   "name": "1",
   "version": "0.0.1",
   "scripts": {
-    "start": "babel-node ./mro1"
+    "start": "babel-node ./A"
   },
   "dependencies": {
     "babel-cli": "6.26.0",
