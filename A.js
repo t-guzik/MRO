@@ -6,7 +6,7 @@ import now from 'performance-now';
 import cov from 'compute-covariance'
 import numeric from 'numeric'
 
-const plotly = require('plotly')('tomasz.guzik94', 'fG4jA7m8uUcRnKIvFs0R')
+const plotly = require('plotly')()
 
 // Logging
 const log       = console.log;
