@@ -1,0 +1,22 @@
+{
+  "name": "1",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "babel-node ./A"
+  },
+  "dependencies": {
+    "babel-cli": "6.26.0",
+    "babel-preset-env": "1.6.0",
+    "babel-preset-stage-2": "6.24.1",
+    "chalk": "^2.1.0",
+    "compute-covariance": "^1.0.1",
+    "is": "3.2.1",
+    "lodash": "4.17.4",
+    "mathjs": "latest",
+    "ml-pca": "^2.1.0",
+    "moment": "^2.19.1",
+    "numeric": "^1.2.6",
+    "performance-now": "^2.1.0",
+    "plotly": "^1.0.6"
+  }
+}
