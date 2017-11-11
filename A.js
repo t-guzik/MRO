@@ -44,7 +44,7 @@ const measurePerformance = (fun, ...args) => {
 // Data
 const radius       = 5;
 const pointsNumber = 5000;
-const dimension    = 2
+const dimension    = 13
 const point        = { min : 0, max : 2 * radius };
 
 const COLORS = {
@@ -71,6 +71,13 @@ const getTwoMax = array => {
   const second = newArray.indexOf(_.max(newArray));
 
   return [first, second]
+}
+
+const normalize = array => {
+  const mean = math.mean(array)
+  const std = math.std(array)
+
+  return _.map(array, x => _.map(x, single => (single-mean)/std))
 }
 
 const calculateCurseOfDimension = (dimension) => {
@@ -104,6 +111,8 @@ const calculateCurseOfDimension = (dimension) => {
     sample.push(generated)
   }
 
+  sample = normalize(sample)
+
   const separatedVariables = []
 
   for (let i = 0; i < sample[0].length; i++) {
@@ -112,6 +121,7 @@ const calculateCurseOfDimension = (dimension) => {
 
   const covariance = cov(separatedVariables)
   const eigen = numeric.eig(covariance)
+
   let eigenVector = eigen.E.x
   let eigenValues = eigen.lambda.x
 
@@ -132,8 +142,8 @@ const calculateCurseOfDimension = (dimension) => {
   }
 
   const traceInside = {
-    x      : separatedVariables[0].filter((x, i) => classes.INSIDE.indexOf(i) !== -1),
-    y      : separatedVariables[1].filter((x, i) => classes.INSIDE.indexOf(i) !== -1),
+    x      : separatedVariablesReoriented[0].filter((x, i) => classes.INSIDE.indexOf(i) !== -1),
+    y      : separatedVariablesReoriented[1].filter((x, i) => classes.INSIDE.indexOf(i) !== -1),
     mode   : 'markers',
     name : 'Wewnątrz hipersfery',
     marker : {
@@ -147,8 +157,8 @@ const calculateCurseOfDimension = (dimension) => {
   };
 
   const traceOutside = {
-    x      : separatedVariables[0].filter((x, i) => classes.OUTSIDE.indexOf(i) !== -1),
-    y      : separatedVariables[1].filter((x, i) => classes.OUTSIDE.indexOf(i) !== -1),
+    x      : separatedVariablesReoriented[0].filter((x, i) => classes.OUTSIDE.indexOf(i) !== -1),
+    y      : separatedVariablesReoriented[1].filter((x, i) => classes.OUTSIDE.indexOf(i) !== -1),
     name : 'Na zewnątrz hipersfery',
     mode   : 'markers',
     marker : {
@@ -162,8 +172,8 @@ const calculateCurseOfDimension = (dimension) => {
   };
 
   const traceCorners = {
-    x      : separatedVariables[0].filter((x, i) => classes.CORNERS.indexOf(i) !== -1),
-    y      : separatedVariables[1].filter((x, i) => classes.CORNERS.indexOf(i) !== -1),
+    x      : separatedVariablesReoriented[0].filter((x, i) => classes.CORNERS.indexOf(i) !== -1),
+    y      : separatedVariablesReoriented[1].filter((x, i) => classes.CORNERS.indexOf(i) !== -1),
     name : 'W narożnikach hipersześcianu',
     mode   : 'markers',
     marker : {
@@ -176,10 +186,24 @@ const calculateCurseOfDimension = (dimension) => {
     type   : 'scatter'
   };
 
+  // const line = {
+  //   x      : [eigenValues[biggestEigenValues[0]] * eigenVector[0][0], eigenValues[biggestEigenValues[0]] * eigenVector[1][0]],
+  //   y      : [eigenValues[biggestEigenValues[0]] * eigenVector[0][1], eigenValues[biggestEigenValues[0]] * eigenVector[1][1]],
+  //   name   : 'Princincipal components',
+  //   marker : {
+  //     size : 5,
+  //     line : {
+  //       color : '#000',
+  //       width : 0.5
+  //     }
+  //   },
+  //   type   : 'line'
+  // };
+
   info(`Redukcja z ${dimension} wymiarów`)
-  info(`Wewnątrz hipersfery: ${(traceInside.x.length/separatedVariables[0].length).toPrecision(2)}%`)
-  info(`Na zewnątrz hipersfery: ${(traceOutside.x.length/separatedVariables[0].length).toPrecision(2)}%`)
-  info(`W narożnikach hipersześcianu: ${(traceCorners.x.length/separatedVariables[0].length).toPrecision(2)}%`)
+  info(`Wewnątrz hipersfery: ${((traceInside.x.length/separatedVariablesReoriented[0].length)*100).toPrecision(3)}%`)
+  info(`Na zewnątrz hipersfery: ${((traceOutside.x.length/separatedVariablesReoriented[0].length)*100).toPrecision(3)}%`)
+  info(`W narożnikach hipersześcianu: ${((traceCorners.x.length/separatedVariablesReoriented[0].length)*100).toPrecision(3)}%`)
 
   const data = [traceInside, traceOutside, traceCorners];
 
@@ -198,13 +222,13 @@ const calculateCurseOfDimension = (dimension) => {
   };
 
   const graphOptions = {
-    filename : `PCA 2d from ${dimension}d`,
+    filename : `PCA 2d from ${dimension} dimensions`,
     layout : layout,
     fileopt : 'overwrite'
   };
 
   plotly.plot(data, graphOptions, function (err, msg) {
-    console.log(msg);
+    err ? console.log(err) : console.log(msg);
   });
 }
 

@@ -1,0 +1,114 @@
+<html lang="en">
+
+<body>
+<canvas id="canvas"></canvas>
+<canvas id="result"></canvas>
+<br>
+<textarea id="text" style="width:100%; height:calc(100% - 134px);"></textarea>
+
+<script>
+  var img = new Image();
+
+  img.onload = function () {
+    // SET RGB FOR CLASSES
+    const patterns = {
+      one   : {     // yellow
+        r : 255,
+        g : 242,
+        b : 0
+      },
+      two   : {     // blue
+        r : 0,
+        g : 162,
+        b : 232
+      },
+      three : {     // red
+        r : 237,
+        g : 28,
+        b : 36
+      },
+      four  : {     // green
+        r : 34,
+        g : 177,
+        b : 76
+      }
+    }
+
+    const height  = img.height;
+    const width   = img.width;
+    const canvas  = document.getElementById('canvas');
+    canvas.height = height;
+    canvas.width  = width;
+    const context = canvas.getContext('2d');
+    context.drawImage(img, 0, 0);
+
+    let data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+    const classes = []
+    const err     = 1
+
+    for (let i = 0; i < data.length; i += 4) {
+      let x = (i / 4) % width;
+      let y = Math.floor((i / 4) / width);
+
+      let red   = data[i];
+      let green = data[i + 1];
+      let blue  = data[i + 2];
+
+      if (Math.abs(red - patterns.one.r) < err && Math.abs(green - patterns.one.g) < err && Math.abs(blue - patterns.one.b) < err) {
+        classes.push({ name : 1, x : x, y : y })
+      }
+
+      if (Math.abs(red - patterns.two.r) < err && Math.abs(green - patterns.two.g) < err && Math.abs(blue - patterns.two.b) < err) {
+        classes.push({ name : 2, x : x, y : y })
+      }
+
+      if (Math.abs(red - patterns.three.r) < err && Math.abs(green - patterns.three.g) < err && Math.abs(blue - patterns.three.b) < err) {
+        classes.push({ name : 3, x : x, y : y })
+      }
+
+      if (Math.abs(red - patterns.four.r) < err && Math.abs(green - patterns.four.g) < err && Math.abs(blue - patterns.four.b) < err) {
+        classes.push({ name : 4, x : x, y : y })
+      }
+
+    }
+
+    const result  = document.getElementById('result');
+    result.height = height;
+    result.width  = width;
+
+    const ctx     = result.getContext('2d');
+    ctx.fillStyle = `rgb(${patterns.one.r}, ${patterns.one.g}, ${patterns.one.b})`
+
+    for (let k = 0; k < classes.length; k++) {
+      classes[k].name === 1 ? ctx.fillRect(classes[k].x, classes[k].y, 1, 1) : null;
+    }
+
+    ctx.fillStyle = `rgb(${patterns.two.r}, ${patterns.two.g}, ${patterns.two.b})`
+
+    for (let k = 0; k < classes.length; k++) {
+      classes[k].name === 2 ? ctx.fillRect(classes[k].x, classes[k].y, 1, 1) : null;
+    }
+
+    ctx.fillStyle = `rgb(${patterns.three.r}, ${patterns.three.g}, ${patterns.three.b})`
+
+    for (let k = 0; k < classes.length; k++) {
+      classes[k].name === 3 ? ctx.fillRect(classes[k].x, classes[k].y, 1, 1) : null;
+    }
+
+    ctx.fillStyle = `rgb(${patterns.four.r}, ${patterns.four.g}, ${patterns.four.b})`
+
+    for (let k = 0; k < classes.length; k++) {
+      classes[k].name === 4 ? ctx.fillRect(classes[k].x, classes[k].y, 1, 1) : null;
+    }
+
+    document.getElementById('text').innerHTML = JSON.stringify(classes)
+    document.getElementById('text').select();
+  }
+
+  img.crossOrigin = 'anonymous';
+  img.src         = './B1.png';
+</script>
+</body>
+
+</html>
